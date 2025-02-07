@@ -13,8 +13,9 @@ class DataLoader:
         self.df=pd.read_excel(file_path)
 
     def get_columnIds(self):
-        for index, element in enumerate(self.df.columns):
-            print(index, element)
+        # for index, element in enumerate(self.df.columns):
+        #     print(index, element)
+        return {index:element for index, element in enumerate(self.df.columns)}
 
     def get_answers(self,columnId,limit=None):
         question=self.df.columns[columnId]
@@ -38,16 +39,18 @@ class Categorizer:
         formatted_answers = "\n".join([f"{i+1}. {answer}" for i, answer in enumerate(answers)])
         system_prompt = (
             "You will receive multiple employee survey responses and a list of existing categories. "
+            f"The original questions was: {question}"
             f"For each response, assign up to {max_categories_per_answer} relevant category labels/sentece from the existing categories. "
+            "Do NOT use any prefix for the categories like 'new category' os something like this"
             "If none of the existing categories are suitable, you may create a new category, ensuring that the total number of categories does not exceed 30. "
             "Avoid using similar or duplicate categories. "
             "Provide the results as a JSON array, where each element is an array of categories corresponding to each response. "
             "The response must contain only the JSON array with no additional text, markdown formatting, or extra characters. "
-            "Use the same language for the category labels/sentece as the survey response."
+            "Use the same language for the category labels/sentece as the language of the survey question."
         )
-        existing_categories = self.categories_dict.get(question, {})
+        existing_categories = [cat for cat in self.categories_dict.get(question, {}).keys() if cat]
         user_prompt = (
-            f"Existing categories: [{', '.join(existing_categories.keys())}].\n\n"
+            f"Existing categories: [{', '.join(existing_categories)}].\n\n"
             f"Survey Answers:\n{formatted_answers}\n\n"
             "Please provide the category assignments as specified."
         )
@@ -68,7 +71,7 @@ class Categorizer:
             categories = categories_list[i]
             self.answers_categories[f"{question}_2"].append(answers[i])
             for j in range(max_categories_per_answer):
-                category="None"
+                category=None
                 if len(categories)>j:
                     category=categories[j]
                 self.answers_categories[f"{question}_category_{j}"].append(category)

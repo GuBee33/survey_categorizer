@@ -1,14 +1,24 @@
 from fastapi import FastAPI, File, UploadFile, HTTPException, BackgroundTasks
 from fastapi.responses import FileResponse, JSONResponse
-from pydantic import BaseModel, Field, validator
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel, Field, field_validator
 from typing import List, Dict, Optional
 import os
 import uuid
 import pandas as pd
 from services import *
+from datetime import datetime
 
 
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Set to ["*"] to allow all origins
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 ALLOWED_EXTENSIONS = {"xlsx"}
 MAX_FILE_SIZE = 10 * 1024 * 1024  # 10 MB
@@ -30,14 +40,14 @@ def cleanup_file(path: str):
         print(f"Error deleting file {path}: {e}")
 
 @app.post("/upload/")
-async def upload_file(file: UploadFile = File(...), background_tasks: BackgroundTasks = None):
+async def upload_file(file: UploadFile = File(...)):
     # Validate file extension
     extension = file.filename.split(".")[-1].lower()
     if extension not in ALLOWED_EXTENSIONS:
         raise HTTPException(status_code=400, detail="File type not allowed.")
     
     # Generate a unique filename to prevent collisions
-    unique_filename = f"{uuid.uuid4().hex}_{file.filename}"
+    unique_filename = f"{datetime.now().strftime('%Y_%m_%d_%H_%M_%S')}_{file.filename}"
     
     
     file_path = os.path.join(UPLOAD_DIRECTORY, unique_filename)
@@ -79,6 +89,15 @@ def list_files():
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error listing files: {str(e)}")
 
+@app.get("/columns/")
+async def get_columns(filename: str):
+    file_path = os.path.join(UPLOAD_DIRECTORY, filename)
+    if not os.path.isfile(file_path):
+        raise HTTPException(status_code=404, detail="File not found in the upload directory.")
+    
+    dl = DataLoader(file_path)
+    return {"columns": dl.get_columnIds()}
+
 class ProcessRequest(BaseModel):
     filename: str = Field(..., description="Name of the uploaded Excel file.")
     column_ids: List[int] = Field(..., description="List of column indices to process.")
@@ -106,7 +125,7 @@ class ProcessRequest(BaseModel):
         description="Optional size of chunks for processing."
     )
 
-    @validator('filename')
+    @field_validator('filename')
     def validate_filename(cls, v):
         if not v.endswith('.xlsx'):
             raise ValueError('Filename must have a .xlsx extension.')
@@ -141,13 +160,6 @@ async def process_file(request: ProcessRequest):
                 detail="Keys of categories_per_column_ids must exactly match the provided column_ids."
             )
         
-        # (Optional) Validate that each category list is non-empty
-        for col_id, categories in request.categories_per_column_ids.items():
-            if not categories:
-                raise HTTPException(
-                    status_code=400,
-                    detail=f"Category list for column_id {col_id} cannot be empty."
-                )
         
         # Set chunk_size
         chunk_size = 10
