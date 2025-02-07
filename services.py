@@ -97,7 +97,7 @@ class Exporter:
         Sanitize a string to be a valid filename ot sheetname by removing or replacing invalid characters.
         """
         # Define a pattern for invalid filename characters
-        invalid_chars = r'[\s<>:"/\\|?*]'
+        invalid_chars = r'[\s<>:"|?*]'
         # Replace invalid characters with underscores
         sanitized = re.sub(invalid_chars, '_', name)
         # Optionally, remove leading/trailing whitespace and dots
@@ -141,7 +141,6 @@ class SurveyAnalyzer:
         self.chunker = Chunker(chunk_size)
         self.excel_file = result_excel
         self.chunk_size=chunk_size
-        self.loader.get_columnIds()
         self.dfs_2_excel={}
 
     def find_keys_by_value(self, target_value):
@@ -170,7 +169,8 @@ class SurveyAnalyzer:
         stat_df=stat_df_groupby.groupby("Category")[question].sum().reset_index().sort_values(question,ascending=False)
         return {f"{question[:15]}_stat_groupby":stat_df_groupby,f"{question[:15]}_stat":stat_df}
 
-    def run(self,columnIds,categories_per_columnId,max_categories_per_answer,aggregation_column_id):
+    def run(self,columnIds,categories_per_columnId,max_categories_per_answer,aggregation_column_id=None):
+        print(columnIds,categories_per_columnId,max_categories_per_answer,aggregation_column_id)
         for columnId in columnIds:
             question=self.loader.df.columns[columnId]
             self.answers = self.loader.get_answers(columnId,self.answer_limit)
@@ -178,7 +178,7 @@ class SurveyAnalyzer:
         self.loader.df=pd.concat([self.loader.df,pd.DataFrame(self.categorizer.answers_categories)],axis=1)
         self.dfs_2_excel = self.dfs_2_excel | {"rawdata":self.loader.df}
         
-        for columnId in columnIds:
-            self.dfs_2_excel = self.dfs_2_excel | self.aggregate_categories(columnId,aggregation_column_id,max_categories_per_answer)
+        if aggregation_column_id:
+            for columnId in columnIds:
+                self.dfs_2_excel = self.dfs_2_excel | self.aggregate_categories(columnId,aggregation_column_id,max_categories_per_answer)
         self.export_results()
-        # self.export_results(question)
