@@ -28,7 +28,8 @@ class Categorizer:
         self.model = model
 
     def categorize_answers(self, question,answers,categories,max_categories_per_answer=3):
-        self.categories_dict[question]={category: [] for category in categories}
+        if question not in self.categories_dict:
+            self.categories_dict[question]={category: [] for category in categories}
         if f"{question}_2" not in self.answers_categories:
             self.answers_categories[f"{question}_2"]=[]
         for i in range(max_categories_per_answer):
@@ -44,8 +45,9 @@ class Categorizer:
             "The response must contain only the JSON array with no additional text, markdown formatting, or extra characters. "
             "Use the same language for the category labels as the survey response."
         )
+        existing_categories = self.categories_dict.get(question, {})
         user_prompt = (
-            f"Existing categories: [{', '.join(self.categories_dict[question].keys())}].\n\n"
+            f"Existing categories: [{', '.join(existing_categories.keys())}].\n\n"
             f"Survey Answers:\n{formatted_answers}\n\n"
             "Please provide the category assignments as specified."
         )
@@ -66,7 +68,7 @@ class Categorizer:
             categories = categories_list[i]
             self.answers_categories[f"{question}_2"].append(answers[i])
             for j in range(max_categories_per_answer):
-                category=None
+                category="None"
                 if len(categories)>j:
                     category=categories[j]
                 self.answers_categories[f"{question}_category_{j}"].append(category)
@@ -167,10 +169,9 @@ class SurveyAnalyzer:
         stat_df_groupby= self.loader.df.melt(id_vars=[question, aggregate_by], value_vars=categories,
                         var_name='CategoryType', value_name='Category').drop('CategoryType', axis=1).groupby([aggregate_by,'Category']).count().reset_index().sort_values([aggregate_by,question],ascending=False)
         stat_df=stat_df_groupby.groupby("Category")[question].sum().reset_index().sort_values(question,ascending=False)
-        return {f"{question[:15]}_stat_groupby":stat_df_groupby,f"{question[:15]}_stat":stat_df}
+        return {f"{question[:15]}_{column_id_of_question}_stat_groupby":stat_df_groupby,f"{question[:15]}_{column_id_of_question}_stat":stat_df}
 
     def run(self,columnIds,categories_per_columnId,max_categories_per_answer,aggregation_column_id=None):
-        print(columnIds,categories_per_columnId,max_categories_per_answer,aggregation_column_id)
         for columnId in columnIds:
             question=self.loader.df.columns[columnId]
             self.answers = self.loader.get_answers(columnId,self.answer_limit)

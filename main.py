@@ -1,11 +1,10 @@
 from fastapi import FastAPI, File, UploadFile, HTTPException, BackgroundTasks
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, JSONResponse
 from pydantic import BaseModel, Field, validator
 from typing import List, Dict, Optional
 import os
 import uuid
 import pandas as pd
-import json
 from services import *
 
 
@@ -55,15 +54,12 @@ async def upload_file(file: UploadFile = File(...), background_tasks: Background
                 if size > MAX_FILE_SIZE:
                     raise HTTPException(status_code=400, detail="File size exceeds limit.")
                 buffer.write(chunk)
-        
-        # Schedule cleanup after use or after a certain condition
-        # if background_tasks:
-        #     background_tasks.add_task(cleanup_file, file_path)
+
         df=pd.read_excel(file_path)
         
         return JSONResponse(
             status_code=200,
-            content={"filename": unique_filename, "temp_path": file_path, "columns":[f"{index} {element}" for index, element in enumerate(df.columns)]},
+            content={"filename": unique_filename, "temp_path": file_path, "columns":{index:element for index, element in enumerate(df.columns)}},
         )
     except Exception as e:
         if os.path.exists(file_path):

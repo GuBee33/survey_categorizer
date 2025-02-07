@@ -2,3 +2,4 @@ textwork/
 *.xlsx
 *.txt
 !requirements.txt
+__pycache__
