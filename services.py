@@ -38,12 +38,12 @@ class Categorizer:
         formatted_answers = "\n".join([f"{i+1}. {answer}" for i, answer in enumerate(answers)])
         system_prompt = (
             "You will receive multiple employee survey responses and a list of existing categories. "
-            f"For each response, assign up to {max_categories_per_answer} relevant category labels from the existing categories. "
+            f"For each response, assign up to {max_categories_per_answer} relevant category labels/sentece from the existing categories. "
             "If none of the existing categories are suitable, you may create a new category, ensuring that the total number of categories does not exceed 30. "
             "Avoid using similar or duplicate categories. "
             "Provide the results as a JSON array, where each element is an array of categories corresponding to each response. "
             "The response must contain only the JSON array with no additional text, markdown formatting, or extra characters. "
-            "Use the same language for the category labels as the survey response."
+            "Use the same language for the category labels/sentece as the survey response."
         )
         existing_categories = self.categories_dict.get(question, {})
         user_prompt = (
