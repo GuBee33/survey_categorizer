@@ -6,7 +6,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import re
 
-os.environ['OPENAI_API_KEY'] = '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'
+
 
 class DataLoader:
     def __init__(self, file_path):
