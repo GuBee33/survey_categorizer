@@ -1,13 +1,9 @@
 <script lang="ts">
     import { onMount } from "svelte";
-    import { writable } from "svelte/store";
 
     const API_BASE_URL: string =
         import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
 
-    interface Dropdown2Options {
-        [key: string]: string;
-    }
 
     let uploadedFileName: string = "";
     let dropdown1Options: string[] = [];

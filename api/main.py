@@ -10,7 +10,7 @@ from services import *
 from datetime import datetime
 
 
-app = FastAPI()
+app = FastAPI(root_path="/api")
 
 app.add_middleware(
     CORSMiddleware,
