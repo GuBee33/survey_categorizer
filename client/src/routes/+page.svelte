@@ -129,6 +129,9 @@
             isSubmitting = false;
         }
     };
+    const clear_categoriesPerColumn=() =>{
+        categoriesPerColumn={}
+    }
 </script>
 
 <div class="max-w-4xl mx-auto p-6 bg-white shadow-md rounded-md">
@@ -145,7 +148,6 @@
                 class="mt-2 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:border
                        file:border-gray-300 file:rounded-md file:text-sm file:font-semibold
                        file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-                on:change={uploadFile}
             />
         </div>
         <!-- Upload Button -->
@@ -188,6 +190,7 @@
                 <select
                     id="column-ids"
                     bind:value={column_ids}
+                    on:change={clear_categoriesPerColumn}
                     multiple
                     class="mt-2 block w-full border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                 >
