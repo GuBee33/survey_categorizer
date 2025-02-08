@@ -51,8 +51,8 @@
     };
 
     // Handle file upload separately
-    const uploadFile = async (event: Event) => {
-        const target = event.target as HTMLInputElement;
+    const uploadFile = async () => {
+        const target = document.getElementById('file-upload') as HTMLInputElement;
         const file = target.files ? target.files[0] : null;
         if (file) {
             const formData = new FormData();
