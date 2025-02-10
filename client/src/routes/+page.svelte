@@ -131,6 +131,9 @@
     };
     const clear_categoriesPerColumn=() =>{
         categoriesPerColumn={}
+        column_ids.forEach(cold_id => {
+            categoriesPerColumn[cold_id]=""
+        });
     }
 </script>
 
